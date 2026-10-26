@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>3KM Locação</title>
+
+<style>
+
+body{
+font-family:Arial,sans-serif;
+background:#f2f2f2;
+margin:0;
+padding:15px;
+}
+
+h1{
+text-align:center;
+color:#0d6efd;
+}
+
+.card{
+background:white;
+padding:15px;
+border-radius:10px;
+margin-top:15px;
+box-shadow:0 2px 5px rgba(0,0,0,.1);
+}
+
+input,select{
+width:100%;
+padding:15px;
+margin-top:8px;
+margin-bottom:8px;
+font-size:18px;
+box-sizing:border-box;
+}
+
+button{
+width:100%;
+padding:18px;
+margin-top:8px;
+font-size:20px;
+border:none;
+border-radius:8px;
+cursor:pointer;
+}
+
+.azul{
+background:#0d6efd;
+color:white;
+}
+
+.verde{
+background:#198754;
+color:white;
+}
+
+.whats{
+background:#25D366;
+color:white;
+}
+
+.vermelho{
+background:#dc3545;
+color:white;
+}
+
+.menu{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px;
+}
+
+.item{
+padding:10px;
+background:#fafafa;
+border:1px solid #ddd;
+border-radius:8px;
+margin-top:8px;
+}
+
+#contrato{
+background:white;
+padding:15px;
+margin-top:15px;
+border-radius:8px;
+line-height:1.7;
+}
+
+@media print{
+
+body *{
+visibility:hidden;
+}
+
+#contrato,
+#contrato *{
+visibility:visible;
+}
+
+#contrato{
+position:absolute;
+left:0;
+top:0;
+width:100%;
+}
+
+}
+
+</style>
+</head>
+<body>
+
+<h1>🚗 3KM LOCAÇÃO</h1>
+
+<div class="menu">
+
+<button class="azul"
+onclick="mostrar('novo')">
+🚗 Novo Contrato
+</button>
+
+<button class="verde"
+onclick="mostrar('veiculos')">
+🚙 Veículos
+</button>
+
+</div>
+
+<div id="novo" class="card">
+
+<h2>Novo Contrato</h2>
+
+<input id="cliente"
+placeholder="Nome do Cliente">
+
+<input id="cpf"
+placeholder="CPF">
+
+<input id="telefone"
+placeholder="Telefone">
+
+<select id="veiculoContrato">
+<option value="">
+Selecione Veículo
+</option>
+</select>
+
+<label>Data Retirada</label>
+
+<input type="date" id="inicio">
+
+<label>Data Devolução</label>
+
+<input type="date" id="fim">
+
+<button
+class="azul"
+onclick="gerarContrato()">
+📄 Gerar Contrato
+</button>
+
+<button
+class="verde"
+onclick="window.print()">
+🖨️ Imprimir
+</button>
+
+<button
+class="whats"
+onclick="enviarWhatsapp()">
+📱 WhatsApp
+</button>
+
+<div id="contrato"></div>
+
+</div>
+
+<div id="veiculos"
+class="card"
+style="display:none">
+
+<h2>Cadastro de Veículos</h2>
+
+<input
+id="modelo"
+placeholder="Modelo">
+
+<input
+id="placa"
+placeholder="Placa">
+
+<input
+id="diaria"
+placeholder="Valor da Diária">
+
+<button
+class="verde"
+onclick="salvarVeiculo()">
+💾 Salvar Veículo
+</button>
+
+<div id="listaVeiculos"></div>
+
+</div>
+
+<script>
+
+function mostrar(tela){
+
+document
+.getElementById("novo")
+.style.display="none";
+
+document
+.getElementById("veiculos")
+.style.display="none";
+
+document
+.getElementById(tela)
+.style.display="block";
+
+}
+
+function salvarVeiculo(){
+
+const modelo =
+document.getElementById("modelo").value;
+
+const placa =
+document.getElementById("placa").value;
+
+const diaria =
+document.getElementById("diaria").value;
+
+if(!modelo || !placa){
+alert("Preencha modelo e placa");
+return;
+}
+
+let lista =
+JSON.parse(
+localStorage.getItem("veiculos")
+|| "[]"
+);
+
+lista.push({
+id:Date.now(),
+modelo,
+placa,
+diaria
+});
+
+localStorage.setItem(
+"veiculos",
+JSON.stringify(lista)
+);
+
+document.getElementById("modelo").value="";
+document.getElementById("placa").value="";
+document.getElementById("diaria").value="";
+
+carregarVeiculos();
+
+alert("Veículo salvo");
+
+}
+
+function excluirVeiculo(id){
+
+let lista =
+JSON.parse(
+localStorage.getItem("veiculos")
+|| "[]"
+);
+
+lista =
+lista.filter(v=>v.id!==id);
+
+localStorage.setItem(
+"veiculos",
+JSON.stringify(lista)
+);
+
+carregarVeiculos();
+
+}
+
+function carregarVeiculos(){
+
+const lista =
+JSON.parse(
+localStorage.getItem("veiculos")
+|| "[]"
+);
+
+const div =
+document.getElementById("listaVeiculos");
+
+const select =
+document.getElementById("veiculoContrato");
+
+div.innerHTML="";
+select.innerHTML=
+'<option value="">Selecione Veículo</option>';
+
+lista.forEach(v=>{
+
+div.innerHTML += `
+<div class="item">
+
+<b>${v.modelo}</b><br>
+
+Placa: ${v.placa}<br>
+
+Diária: R$ ${v.diaria}
+
+<button
+class="vermelho"
+onclick="excluirVeiculo(${v.id})">
+
+🗑️ Excluir
+
+</button>
+
+</div>
+`;
+
+select.innerHTML += `
+<option value="${v.id}">
+${v.modelo} - ${v.placa}
+</option>
+`;
+
+});
+
+}
+
+function gerarContrato(){
+
+const cliente =
+document.getElementById("cliente").value;
+
+const cpf =
+document.getElementById("cpf").value;
+
+const inicio =
+document.getElementById("inicio").value;
+
+const fim =
+document.getElementById("fim").value;
+
+const idVeiculo =
+Number(
+document.getElementById("veiculoContrato").value
+);
+
+const lista =
+JSON.parse(
+localStorage.getItem("veiculos")
+|| "[]"
+);
+
+const v =
+lista.find(x=>x.id===idVeiculo);
+
+if(!v){
+alert("Escolha um veículo");
+return;
+}
+
+const html = `
+
+<h2 align="center">
+CONTRATO DE LOCAÇÃO
+</h2>
+
+<p>
+
+<b>Locatário:</b>
+${cliente}
+
+</p>
+
+<p>
+
+<b>CPF:</b>
+${cpf}
+
+</p>
+
+<p>
+
+<b>Veículo:</b>
+${v.modelo}
+
+</p>
+
+<p>
+
+<b>Placa:</b>
+${v.placa}
+
+</p>
+
+<p>
+
+<b>Valor da diária:</b>
+R$ ${v.diaria}
+
+</p>
+
+<p>
+
+<b>Período:</b>
+${inicio}
+até
+${fim}
+
+</p>
+
+<p>
+
+O locatário declara receber
+o veículo em boas condições,
+assumindo responsabilidade
+por multas e danos durante
+o período da locação.
+
+</p>
+
+<br><br><br>
+
+________________________________
+
+<br>
+
+Assinatura do Cliente
+
+`;
+
+document
+.getElementById("contrato")
+.innerHTML = html;
+
+let hist =
+JSON.parse(
+localStorage.getItem("historico")
+|| "[]"
+);
+
+hist.unshift({
+cliente,
+veiculo:v.modelo,
+data:new Date()
+.toLocaleString()
+});
+
+localStorage.setItem(
+"historico",
+JSON.stringify(hist)
+);
+
+}
+
+function enviarWhatsapp(){
+
+const telefone =
+document
+.getElementById("telefone")
+.value;
+
+const cliente =
+document
+.getElementById("cliente")
+.value;
+
+if(!telefone){
+alert(
+"Informe o telefone"
+);
+return;
+}
+
+const msg =
+`Olá ${cliente},
+seu contrato de locação foi gerado com sucesso.`;
+
+window.open(
+`https://wa.me/55${telefone}?text=${encodeURIComponent(msg)}`,
+"_blank"
+);
+
+}
+
+carregarVeiculos();
+
+</script>
+
+</body>
+</html>
